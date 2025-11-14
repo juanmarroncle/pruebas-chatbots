@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Agente prueba CHATWOOT</title>
 
-  <!-- estilo original (mantuve tus reglas) -->
   <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,18 +26,15 @@
     #sendButton:hover { transform: scale(1.05); }
     #sendButton:active { transform: scale(0.95); }
     #sendButton:disabled { opacity: 0.5; cursor: not-allowed; }
-    /* small helper so the n8n built-in widget doesn't overlap fixed elements */
     .chatwoot-iframe, .chatwoot-launcher { z-index: 99999; }
   </style>
 </head>
 <body>
-  <!-- Chat UI (tu layout visual) -->
   <main class="chat-container" aria-label="Chat widget">
     <header class="chat-header">
       <h3>Agente de Prueba — Chat</h3>
     </header>
 
-    <!-- Aquí mostramos mensajes locales (estética). El widget de n8n se inyectará por CDN -->
     <section id="localMessages" class="chat-messages" aria-live="polite"></section>
 
     <div class="chat-input-container">
@@ -49,28 +45,12 @@
     </div>
   </main>
 
-  <!-- === n8n chat (CDN import). Mantengo tu import y la llamada createChat === -->
-  <script type="module">
-    import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
-
-    // inicializa el chat de n8n (usa tu webhook)
-    createChat({
-      // mantené tu webhook; si lo cambiás, reemplazá la URL aquí
-      webhookUrl: 'https://n8n.shakeagain.net/webhook/75de0c92-d926-43c1-a23c-470028b4d102/chat',
-      // opcionales según la lib: theme, locale, etc. (si tu versión lo permite)
-      // theme: 'light'
-    });
-  </script>
-
-  <!-- Código JS para que el input local haga POST al webhook n8n (prueba rápida, GUI-only).
-       Esto no reemplaza la integración n8n/chat; es una forma simple de probar mensajes desde la UI. -->
   <script>
     (function () {
       const input = document.getElementById('messageInput');
       const send = document.getElementById('sendButton');
       const localMessages = document.getElementById('localMessages');
 
-      // Muestra un mensaje en la UI local
       function pushLocal(text, cls='user-message') {
         const wrap = document.createElement('div');
         wrap.className = 'message ' + cls;
@@ -82,41 +62,14 @@
         localMessages.scrollTop = localMessages.scrollHeight;
       }
 
-      // Envío sencillo a n8n webhook para test (POST JSON).
-      // REEMPLAZÁ la URL por tu webhook si la cambias.
-      async function postToN8N(text) {
-        const url = 'https://n8n.shakeagain.net/webhook/75de0c92-d926-43c1-a23c-470028b4d102/chat';
-        const payload = {
-          event: 'message_created',
-          message: {
-            message_type: 'incoming',
-            content: text
-            // no ponemos conversation_id aquí; Chatwoot creará una conversacion real si usás el widget
-          }
-        };
-        try {
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          // no hacemos lógica extra con la respuesta; la podés inspeccionar en n8n Executions
-          return res;
-        } catch (err) {
-          console.error('Error al POST a n8n:', err);
-        }
-      }
-
-      send.addEventListener('click', async () => {
+      // UI-only: muestra el mensaje localmente (no lo manda a n8n)
+      send.addEventListener('click', () => {
         const text = input.value.trim();
         if (!text) return;
         pushLocal(text, 'user-message');
         input.value = '';
         input.focus();
-        // Enviamos una copia al webhook (útil para testear la recepción en n8n)
-        await postToN8N(text);
-        // opcional: mostrar respuesta automática local
-        setTimeout(() => pushLocal('Mensaje enviado a n8n para procesamiento', 'bot-message'), 600);
+        setTimeout(() => pushLocal('Este demo sólo muestra el mensaje localmente. Usa el launcher flotante (abajo) para hablar via Chatwoot.', 'bot-message'), 400);
       });
 
       input.addEventListener('keydown', (e) => {
@@ -125,28 +78,54 @@
     })();
   </script>
 
-  <!-- === Chatwoot widget ===
-       Pega el snippet que te da Chatwoot. Ya contiene `websiteToken` (c86ifjN...).
-       Esto crea el launcher flotante (widget) y cuando el usuario escriba, Chatwoot generará
-       una conversación real en la cuenta (útil para obtener conversation_id en la UI).
-  -->
+  <!-- Chatwoot widget -->
   <script>
     (function(d,t) {
-      var BASE_URL="http://31.97.243.241:3000";
-      var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-      g.src=BASE_URL+"/packs/js/sdk.js";
+      // tus datos:
+      var BASE_URL = "http://31.97.243.241:3000"; // tu base_url
+      var WEBSITE_TOKEN = "hsngErdhDU26QUUR2KQED9zE"; // tu websiteToken
+      var IDENTITY_TOKEN = "FmxD7X6fBb94UC5fCsKLbFdb"; // token de validación opcional (ver nota)
+
+      var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+      g.src = BASE_URL + "/packs/js/sdk.js";
       g.async = true;
-      s.parentNode.insertBefore(g,s);
-      g.onload=function(){
+      s.parentNode.insertBefore(g, s);
+
+      g.onload = function () {
+        if (!window.chatwootSDK) {
+          console.warn('Chatwoot SDK no disponible. Revisa BASE_URL y que el servidor Chatwoot esté alcanzable.');
+          return;
+        }
+
         window.chatwootSDK.run({
-          websiteToken: 'hsngErdhDU26QUUR2KQED9zE',
+          websiteToken: WEBSITE_TOKEN,
           baseUrl: BASE_URL
-        })
-      }
+        });
+
+        // ---- Opcional: identificar visitante ----
+        // Dependiendo de la versión de tu Chatwoot (self-hosted), puedes:
+        // 1) Usar setUserToken (si generaste un token de identidad server-side).
+        // 2) O setUser / setUserAttributes si tu SDK lo soporta.
+        //
+        // Prueba esto si querés que el widget abra la conversación ya identificada.
+        try {
+          // Opción A: si tu versión soporta setUserToken (HMAC/identity token)
+          if (window.chatwootSDK.setUserToken) {
+            window.chatwootSDK.setUserToken(IDENTITY_TOKEN);
+            // después de esto el visitante queda identificado en Chatwoot (si el token es correcto)
+          }
+          // Opción B: si tu versión soporta setUser (fallback)
+          else if (window.chatwootSDK.setUser) {
+            // ejemplo: identifica por email / nombre (ajustalo según la info que tengas)
+            window.chatwootSDK.setUser('demo.user@example.com', { name: 'Usuario Demo' });
+          }
+        } catch (err) {
+          console.warn('No se pudo ejecutar la identificación automática del visitante:', err);
+        }
+      };
     })(document,"script");
   </script>
 
-  <!-- Nota: el widget de Chatwoot se mostrará como launcher flotante. -->
-
+  <!-- fin -->
 </body>
 </html>

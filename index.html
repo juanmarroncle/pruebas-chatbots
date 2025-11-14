@@ -3,150 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Agente prueba CHATWOOT</title>
+  <title>Agente prueba CHATWOOT (solo widget)</title>
 
-  <!-- estilo original (mantuve tus reglas) -->
-  <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .chat-container { background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 500px; height: 600px; display: flex; flex-direction: column; overflow: hidden; }
-    .chat-header { background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); color: white; padding: 20px; text-align: center; }
-    .chat-header h3 { font-size: 1.2em; font-weight: 600; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 20px; background: #F7F7F7; }
-    .message { margin-bottom: 15px; animation: fadeIn 0.3s ease-in; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .message-content { padding: 12px 16px; border-radius: 18px; max-width: 80%; word-wrap: break-word; }
-    .user-message .message-content { background: #667EEA; color: white; margin-left: auto; border-bottom-right-radius: 4px; }
-    .bot-message .message-content { background: white; color: #333; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .chat-input-container { padding: 20px; background: white; border-top: 1px solid #E0E0E0; }
-    .input-wrapper { display: flex; gap: 10px; }
-    #messageInput { flex: 1; padding: 12px 16px; border: 2px solid #E0E0E0; border-radius: 24px; font-size: 14px; outline: none; transition: border-color 0.3s; }
-    #messageInput:focus { border-color: #667EEA; }
-    #sendButton { background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); border: none; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; color: white; }
-    #sendButton:hover { transform: scale(1.05); }
-    #sendButton:active { transform: scale(0.95); }
-    #sendButton:disabled { opacity: 0.5; cursor: not-allowed; }
-    /* small helper so the n8n built-in widget doesn't overlap fixed elements */
-    .chatwoot-iframe, .chatwoot-launcher { z-index: 99999; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#f3f4f6; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
+    .container { width:100%; max-width:980px; background:white; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.08); padding:24px; }
+    h1 { font-size:18px; margin-bottom:12px; color:#111827; }
+    p { color:#374151; margin-bottom:16px; }
+    /* Evitar que el widget quede debajo de otros elementos */
+    .chatwoot-iframe, .chatwoot-launcher { z-index: 99999 !important; }
   </style>
 </head>
 <body>
-  <!-- Chat UI (tu layout visual) -->
-  <main class="chat-container" aria-label="Chat widget">
-    <header class="chat-header">
-      <h3>Agente de Prueba — Chat</h3>
-    </header>
+  <div class="container" role="main" aria-label="Demo Chatwoot">
+    <h1>Widget Chatwoot (único)</h1>
+    <p>Este documento carga únicamente el launcher de Chatwoot. Reemplazá <code>BASE_URL</code> y <code>websiteToken</code> abajo según corresponda.</p>
+    <p>Verificá en la bandeja de Chatwoot que aparecen las conversaciones.</p>
+  </div>
 
-    <!-- Aquí mostramos mensajes locales (estética). El widget de n8n se inyectará por CDN -->
-    <section id="localMessages" class="chat-messages" aria-live="polite"></section>
-
-    <div class="chat-input-container">
-      <div class="input-wrapper">
-        <input id="messageInput" type="text" placeholder="Escribí tu mensaje..." aria-label="Mensaje" />
-        <button id="sendButton" aria-label="Enviar mensaje">➤</button>
-      </div>
-    </div>
-  </main>
-
-  <!-- === n8n chat (CDN import). Mantengo tu import y la llamada createChat === -->
-  <script type="module">
-    import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
-
-    // inicializa el chat de n8n (usa tu webhook)
-    createChat({
-      // mantené tu webhook; si lo cambiás, reemplazá la URL aquí
-      webhookUrl: 'https://n8n.shakeagain.net/webhook/75de0c92-d926-43c1-a23c-470028b4d102/chat',
-      // opcionales según la lib: theme, locale, etc. (si tu versión lo permite)
-      // theme: 'light'
-    });
-  </script>
-
-  <!-- Código JS para que el input local haga POST al webhook n8n (prueba rápida, GUI-only).
-       Esto no reemplaza la integración n8n/chat; es una forma simple de probar mensajes desde la UI. -->
-  <script>
-    (function () {
-      const input = document.getElementById('messageInput');
-      const send = document.getElementById('sendButton');
-      const localMessages = document.getElementById('localMessages');
-
-      // Muestra un mensaje en la UI local
-      function pushLocal(text, cls='user-message') {
-        const wrap = document.createElement('div');
-        wrap.className = 'message ' + cls;
-        const inner = document.createElement('div');
-        inner.className = 'message-content';
-        inner.textContent = text;
-        wrap.appendChild(inner);
-        localMessages.appendChild(wrap);
-        localMessages.scrollTop = localMessages.scrollHeight;
-      }
-
-      // Envío sencillo a n8n webhook para test (POST JSON).
-      // REEMPLAZÁ la URL por tu webhook si la cambias.
-      async function postToN8N(text) {
-        const url = 'https://n8n.shakeagain.net/webhook/75de0c92-d926-43c1-a23c-470028b4d102/chat';
-        const payload = {
-          event: 'message_created',
-          message: {
-            message_type: 'incoming',
-            content: text
-            // no ponemos conversation_id aquí; Chatwoot creará una conversacion real si usás el widget
-          }
-        };
-        try {
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          // no hacemos lógica extra con la respuesta; la podés inspeccionar en n8n Executions
-          return res;
-        } catch (err) {
-          console.error('Error al POST a n8n:', err);
-        }
-      }
-
-      send.addEventListener('click', async () => {
-        const text = input.value.trim();
-        if (!text) return;
-        pushLocal(text, 'user-message');
-        input.value = '';
-        input.focus();
-        // Enviamos una copia al webhook (útil para testear la recepción en n8n)
-        await postToN8N(text);
-        // opcional: mostrar respuesta automática local
-        setTimeout(() => pushLocal('Mensaje enviado a n8n para procesamiento', 'bot-message'), 600);
-      });
-
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') send.click();
-      });
-    })();
-  </script>
-
-  <!-- === Chatwoot widget ===
-       Pega el snippet que te da Chatwoot. Ya contiene `websiteToken` (c86ifjN...).
-       Esto crea el launcher flotante (widget) y cuando el usuario escriba, Chatwoot generará
-       una conversación real en la cuenta (útil para obtener conversation_id en la UI).
-  -->
+  <!-- === Chatwoot widget: reemplazá BASE_URL y websiteToken === -->
   <script>
     (function(d,t) {
-      var BASE_URL="https://app.chatwoot.com";
-      var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-      g.src=BASE_URL+"/packs/js/sdk.js";
+      // REEMPLAZA por tu servidor Chatwoot (IP o dominio) y el protocolo correcto (https preferible)
+      var BASE_URL = "http://TU_IP_VPS:3000"; // <-- cambiar por la URL real del VPS (usa https si tu sitio es https)
+      var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+      g.src = BASE_URL + "/packs/js/sdk.js";
       g.async = true;
       s.parentNode.insertBefore(g,s);
-      g.onload=function(){
+      g.onload = function(){
         window.chatwootSDK.run({
-          websiteToken: 'c86ifjNCm5i9rnTGzNqvBBRz',
+          websiteToken: 'hsngErdhDU26QUUR2KQED9zE', // <-- reemplazá por el websiteToken que querés usar
           baseUrl: BASE_URL
-        })
+        });
       }
     })(document,"script");
   </script>
-
-  <!-- Nota: el widget de Chatwoot se mostrará como launcher flotante. -->
 
 </body>
 </html>

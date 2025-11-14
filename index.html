@@ -3,24 +3,55 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chatwoot widget</title>
+  <title>Agente cotizador — Chatwoot</title>
+  <style>
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      background:linear-gradient(135deg,#667EEA 0%,#764BA2 100%);
+      min-height:100vh;margin:0;display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;
+    }
+    .card{
+      background: #fff;color:#222;width:100%;max-width:720px;padding:28px;border-radius:12px;
+      box-shadow:0 10px 40px rgba(0,0,0,.18);text-align:center;
+    }
+    .hint{margin-top:12px;color:#666;font-size:14px}
+  </style>
 </head>
 <body>
-  <!-- Chatwoot widget: reemplaza BASE_URL por la URL real de tu VPS (usa https si tu página es https) -->
+  <div class="card" role="main" aria-live="polite">
+    <h1>Widget Chatwoot activo</h1>
+    <p class="hint">El launcher de Chatwoot debe aparecer en la esquina inferior derecha. Verificá la bandeja en Chatwoot para las conversaciones entrantes.</p>
+  </div>
+
   <script>
     (function(d,t){
-      var BASE_URL = "http://TU_IP_VPS:3000"; // <-- reemplazar por la URL real (https://...)
-      var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
-      g.src = BASE_URL + "/packs/js/sdk.js";
-      g.async = true;
-      s.parentNode.insertBefore(g,s);
-      g.onload = function(){
-        window.chatwootSDK.run({
-          websiteToken: 'hsngErdhDU26QUUR2KQED9zE', // <-- token que compartiste
+      // === REEMPLAZÁ si corresponde ===
+      var BASE_URL = "http://31.97.243.241:3000";     // <- la URL que indicaste
+      var WEBSITE_TOKEN = "hsngErdhDU26QUUR2KQED9zE"; // <- confirmá que este token es el correcto para la inbox
+      // ================================
+
+      var w = window;
+      var s = d.createElement(t);
+      s.src = BASE_URL + "/packs/js/sdk.js";
+      s.async = true;
+      var e = d.getElementsByTagName(t)[0];
+      e.parentNode.insertBefore(s, e);
+
+      s.onload = function() {
+        if (!w.chatwootSDK) {
+          console.warn('chatwoot SDK loaded but window.chatwootSDK not available.');
+          return;
+        }
+        w.chatwootSDK.run({
+          websiteToken: WEBSITE_TOKEN,
           baseUrl: BASE_URL
         });
       };
-    })(document,"script");
+
+      s.onerror = function() {
+        console.error('Error cargando el SDK de Chatwoot desde', BASE_URL + '/packs/js/sdk.js');
+      };
+    })(document, "script");
   </script>
 </body>
 </html>
